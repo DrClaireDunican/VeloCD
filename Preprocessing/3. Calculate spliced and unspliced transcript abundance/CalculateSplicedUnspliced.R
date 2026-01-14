@@ -70,10 +70,10 @@ CalculateSplicedUnspliced <- function(Intron, Exon, Out, TranscriptList, GeneInf
   options(scipen=999)
   gtf_HsDf <- as.data.frame(gtfHs)
   RetainedIntron <- gtf_HsDf[gtf_HsDf$transcript_biotype == "retained_intron",]
-  RetainedIntron_info <- data.frame(RetainedIntron$ID, RetainedIntron$Parent, RetainedIntron$transcript_biotype)
+  RetainedIntron_info <- data.frame(RetainedIntron$ID, unlist(RetainedIntron$Parent), RetainedIntron$transcript_biotype) #latest human annotation (June 2025) required the Parent column to be reformatted to be included in a dataframe
 
-  ExonMeta_filtered <- ExonMeta_filtered[rownames(ExonMeta_filtered) %ni% gsub("_Mega", "", RetainedIntron_info$RetainedIntron.Parent),] #
-  IntronMeta_filtered <- IntronMeta_filtered[rownames(IntronMeta_filtered) %ni% gsub("_Mega", "", RetainedIntron_info$RetainedIntron.Parent),] #
+  ExonMeta_filtered <- ExonMeta_filtered[rownames(ExonMeta_filtered) %ni% gsub("_Mega", "", RetainedIntron_info$"unlist.RetainedIntron.Parent."),] #
+  IntronMeta_filtered <- IntronMeta_filtered[rownames(IntronMeta_filtered) %ni% gsub("_Mega", "", RetainedIntron_info$"unlist.RetainedIntron.Parent."),] #
   print(identical(rownames(IntronMeta_filtered), rownames(ExonMeta_filtered)))
   
   #rm intron that overlap exon
