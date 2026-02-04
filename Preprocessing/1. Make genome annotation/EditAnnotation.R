@@ -1,28 +1,31 @@
-#######################################################Part 1###############################################################
+###########################################Part 1########################################
 
-library("ape"); library(dplyr); library("DescTools"); library("rtracklayer"); library("gdata)
+library("ape"); library(dplyr); library("DescTools")
 
 options(scipen=999)
+
+setwd("/media/claired/906143b9-524c-4abe-8428-6fc9300eb700/LatestAnnotation_June25/")
 
 getmode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
+
 #1. work out multiple transcript "issue"
-gtfHs <- rtracklayer::import('Homo_sapiens.GRCh38.104.gtf') #get your genome annotation, this code has specifically been deigned for Human annotations please adjust accordingly for other species
+gtfHs <- rtracklayer::import('/media/claired/906143b9-524c-4abe-8428-6fc9300eb700/LatestAnnotation_June25/Homo_sapiens.GRCh38.114.gtf') #get your genome annotation, this code has specifically been deigned for Human annotations please adjust accordingly for other species
 gtf_HsDf <- as.data.frame(gtfHs)
-dim(gtf_HsDf[gtf_HsDf$type == "exon",]) #
-dim(gtf_HsDf[gtf_HsDf$type == "gene",]) #
-dim(gtf_HsDf[gtf_HsDf$type == "transcript",]) #
+dim(gtf_HsDf[gtf_HsDf$type == "exon",])
+dim(gtf_HsDf[gtf_HsDf$type == "gene",])
+dim(gtf_HsDf[gtf_HsDf$type == "transcript",])
 
 unique(levels(gtf_HsDf$type)) 
 levels(gtf_HsDf$seqnames) 
 unique(gtf_HsDf$gene_biotype)
-unique(gtf_HsDf$transcript_biotype) #retained intron information is here!
-length(unique(gtf_HsDf[gtf_HsDf$type == "exon",]$transcript_id)) #
+unique(gtf_HsDf$transcript_biotype)
+length(unique(gtf_HsDf[gtf_HsDf$type == "exon",]$transcript_id))
 
-#get genes with multiple  transcript "child" fetaures
-length(unique(gtf_HsDf[gtf_HsDf$type == "transcript",]$gene_id)) #
+#get genes with multiple  transcript "child" features
+length(unique(gtf_HsDf[gtf_HsDf$type == "transcript",]$gene_id))
 #get gene IDs with multiple transcripts
 ParentInfo <- data.frame(gtf_HsDf[gtf_HsDf$type == "transcript",]$gene_id, gtf_HsDf[gtf_HsDf$type == "transcript",]$transcript_id)
 colnames(ParentInfo) <- c("Gene_ID", "Transcript_ID")
@@ -35,11 +38,11 @@ for (parent in unique(ParentInfo$Gene_ID)) {
 }
 parentinfo <- data.frame(unique(ParentInfo$Gene_ID), occurances)
 colnames(parentinfo) <- c("Parent", "Children")
-dim(parentinfo[parentinfo[,2] == 1,]) #
-dim(parentinfo[parentinfo[,2] != 1,]) #
-dim(parentinfo[parentinfo[,2] == 2,]) #
-dim(parentinfo[parentinfo[,2] == 3,]) #
-dim(parentinfo[parentinfo[,2] > 3,]) #
+dim(parentinfo[parentinfo[,2] == 1,]) #44,630
+dim(parentinfo[parentinfo[,2] != 1,]) #34,264
+dim(parentinfo[parentinfo[,2] == 2,]) #6,674
+dim(parentinfo[parentinfo[,2] == 3,]) #4,239
+dim(parentinfo[parentinfo[,2] > 3,]) #23,351
 MultipleTranscripts <- parentinfo[parentinfo[,2] != 1,1]
 
 write.csv(MultipleTranscripts, "MultipleTRanscriptGene.csv")
@@ -51,7 +54,7 @@ New_gtf <- data.frame(matrix(ncol=27,nrow=0), stringsAsFactors = FALSE)
 ToDelExon <- c()
 ToDELTranscripts <- c()
 AllTransDontOverlap <- c()
-touching_exons <- c()
+#touching_exons <- c()
 SaveInfoUsed <- data.frame(matrix(ncol=5,nrow=0), stringsAsFactors = FALSE) #Gene, MegaName, number of transcripts used, TranscriptIDs, Transcript Biotypes
 for (parent in MultipleTranscripts) { #for each gene with multiple transcripts...
   #get transcripts
@@ -60,7 +63,7 @@ for (parent in MultipleTranscripts) { #for each gene with multiple transcripts..
   #only get transcripts that overlap each other
   children_red <- children %>% 
     arrange(start) %>% 
-    group_by(g = cumsum(cummax(lag(end, default = gdata::first(end))) < start)) %>% 
+    group_by(g = cumsum(cummax(lag(end, default = first(end))) < start)) %>% 
     summarise(start = first(start), end = max(end))
   NewChildrenNum <- nrow(children_red)
   #depending on the number of new relative to old children:
@@ -85,18 +88,18 @@ for (parent in MultipleTranscripts) { #for each gene with multiple transcripts..
     MyExons <- exons[exons$transcript_id %in% children$transcript_id,]
     MyExonsRed <- MyExons %>% 
       arrange(start) %>% 
-      group_by(g = cumsum(cummax(lag(end, default = gdata::first(end))) < start)) %>% 
+      group_by(g = cumsum(cummax(lag(end, default = first(end))) < start)) %>% 
       summarise(start = first(start), end = max(end))
     #MyExonsRed_test <- MyExonsRed
     #MyExonsRed_test[,2] <- MyExonsRed_test[,2] - 1
     #MyExonsRed_test[,3] <- MyExonsRed_test[,3] + 1
     #  MyExonsRed_Further <- MyExonsRed_test %>% 
     #  arrange(start) %>% 
-    #  group_by(g = cumsum(cummax(lag(end, default = gdata::first(end))) < start)) %>% 
+    #  group_by(g = cumsum(cummax(lag(end, default = first(end))) < start)) %>% 
     #  summarise(start = first(start), end = max(end))
     #if (nrow(MyExonsRed_Further) < nrow(MyExonsRed_test)) {
     #  touching_exons <- append(touching_exons, parent)
-      #find overlap with MyExonsRed_test and take outtermost original coordinates!
+    #find overlap with MyExonsRed_test and take outtermost original coordinates!
     #}
     ID <- c()
     for (exon in 1:nrow(MyExonsRed)) {
@@ -160,18 +163,18 @@ for (parent in MultipleTranscripts) { #for each gene with multiple transcripts..
       MyExons <- exons[exons$transcript_id %in% myTranscripts,]
       MyExonsRed <- MyExons %>% 
         arrange(start) %>% 
-        group_by(g = cumsum(cummax(lag(end, default = gdata::first(end))) < start)) %>% 
+        group_by(g = cumsum(cummax(lag(end, default = first(end))) < start)) %>% 
         summarise(start = first(start), end = max(end))
       #MyExonsRed_test <- MyExonsRed
       #MyExonsRed_test[,2] <- MyExonsRed_test[,2] - 1
       #MyExonsRed_test[,3] <- MyExonsRed_test[,3] + 1
       #MyExonsRed_Further <- MyExonsRed_test %>% 
       #  arrange(start) %>%  example:ENSG00000205670
-      #  group_by(g = cumsum(cummax(lag(end, default = gdata::first(end))) < start)) %>% 
+      #  group_by(g = cumsum(cummax(lag(end, default = first(end))) < start)) %>% 
       #  summarise(start = first(start), end = max(end))
-     # if (nrow(MyExonsRed_Further) < nrow(MyExonsRed_test)) {
-     #   touching_exons <- append(touching_exons, parent)
-        #find overlap with MyExonsRed_test and take outtermost original coordinates!
+      # if (nrow(MyExonsRed_Further) < nrow(MyExonsRed_test)) {
+      #   touching_exons <- append(touching_exons, parent)
+      #find overlap with MyExonsRed_test and take outtermost original coordinates!
       #}
       ID <- c()
       for (exon in 1:nrow(MyExonsRed)) {
@@ -214,47 +217,50 @@ for (parent in MultipleTranscripts) { #for each gene with multiple transcripts..
   }
 }
 options(scipen=999)
-print(count)
-print(AllTransDontOverlap)
-print(length(AllTransDontOverlap))
-print(touching_exons)
-print(length(touching_exons))
+#print(count)
+print(AllTransDontOverlap) #ENSG00000272027
+print(length(AllTransDontOverlap)) #1
+#print(length(touching_exons)) #0
 write.csv(SaveInfoUsed, "MultipleTRanscriptGeneDetails.csv", row.names=FALSE)
 write.csv(New_gtf, "MegaTranscriptsGTFlines.csv", row.names=FALSE)
 write.csv(AllTransDontOverlap, "MultipleTranscriptButNoOverlap.csv", row.names=FALSE)
+write.csv(ToDELTranscripts, "ToDELTranscripts.csv", row.names=FALSE)
+
+#New_gtf <- read.csv("MegaTranscriptsGTFlines.csv")
+#AllTransDontOverlap <- read.csv("MultipleTranscriptButNoOverlap.csv")
 
 #non-overlapping at all transcripts
-length(unique(gtf_HsDf[gtf_HsDf$type == "transcript",]$transcript_id)) #
-length(unique(New_gtf[New_gtf$type == "transcript",]$transcript_id)) #
-length(unique(gtf_HsDf[gtf_HsDf$type == "gene",]$gene_id)) #
+length(unique(gtf_HsDf[gtf_HsDf$type == "transcript",]$transcript_id)) #38,7954
+length(unique(New_gtf[New_gtf$type == "transcript",]$transcript_id)) #34,263 -1 less than previous estimate
+length(unique(gtf_HsDf[gtf_HsDf$type == "gene",]$gene_id)) #78,894
 #unequal number of parents and genes is due to genes with multiple non-overlapping genes, if these were non-overlapping in the original file they keep their original IDs, if they were reduced down from larger sets then they get new IDs with "_transcript number"
-New_gtf[New_gtf$type == "transcript" & grepl("_1_Mega", New_gtf$transcript_id),] #
-New_gtf[New_gtf$type == "transcript" & grepl("_2_Mega", New_gtf$transcript_id),] #
+New_gtf[New_gtf$type == "transcript" & grepl("_1_Mega", New_gtf$transcript_id),] #none
+New_gtf[New_gtf$type == "transcript" & grepl("_2_Mega", New_gtf$transcript_id),] #none
 
 '%ni%' <- Negate('%in%')
 MultipleTranscripts <- MultipleTranscripts[MultipleTranscripts %ni% AllTransDontOverlap] #
 
 #check sum of these + number of transcripts match the number of lines removed at next step
 nrow(gtf_HsDf[gtf_HsDf$type == "three_prime_utr" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +
-nrow(gtf_HsDf[gtf_HsDf$type == "five_prime_utr" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +
-nrow(gtf_HsDf[gtf_HsDf$type == "start_codon" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
-nrow(gtf_HsDf[gtf_HsDf$type == "stop_codon" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
-nrow(gtf_HsDf[gtf_HsDf$type == "CDS" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
-nrow(gtf_HsDf[gtf_HsDf$type == "exon" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
-nrow(gtf_HsDf[gtf_HsDf$type == "Selenocysteine" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
-length(ToDELTranscripts) #total:  
-length(unique(ToDELTranscripts)) #sanity check that these are the same,
+  nrow(gtf_HsDf[gtf_HsDf$type == "five_prime_utr" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +
+  nrow(gtf_HsDf[gtf_HsDf$type == "start_codon" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
+  nrow(gtf_HsDf[gtf_HsDf$type == "stop_codon" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
+  nrow(gtf_HsDf[gtf_HsDf$type == "CDS" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
+  nrow(gtf_HsDf[gtf_HsDf$type == "exon" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
+  nrow(gtf_HsDf[gtf_HsDf$type == "Selenocysteine" & gtf_HsDf$transcript_id %in% ToDELTranscripts,]) +#
+  length(ToDELTranscripts)
+length(unique(ToDELTranscripts)) #sanity check that these are the same
 
 gtf_HsDfEd <- gtf_HsDf[gtf_HsDf$transcript_id %ni% ToDELTranscripts,] #
 nrow(gtf_HsDf)-nrow(gtf_HsDfEd)
 #remove CDS
-gtf_HsDfEd <- gtf_HsDfEd[gtf_HsDfEd$type != "CDS",] #
+gtf_HsDfEd <- gtf_HsDfEd[gtf_HsDfEd$type != "CDS",]
 
 #put in to df with ee after gene lines
 TopLevelParents <- MultipleTranscripts
 existingDF <- gtf_HsDfEd
 rownames(existingDF) <- 1:nrow(existingDF)
-nrow(existingDF) + nrow(New_gtf)
+nrow(existingDF) + nrow(New_gtf) #614161
 for (Parent in unique(TopLevelParents)) {
   parent_row <- existingDF[existingDF$gene_id == Parent,] #get the genes row
   parent_row <- parent_row[complete.cases(parent_row[,1:3]),]
@@ -275,34 +281,33 @@ existingDF[existingDF$type == "Selenocysteine",] #2 nt bits, 119 of them, are ti
 #remove these
 existingDF <- existingDF[existingDF$type != "Selenocysteine",]
 
-#check number of unqiue parents is genes + multi-transcript etc.
+#check number of unique parents is genes + multi-transcript etc.
 #Get the number/proportion of single exon genes
 existingDFExons <-  existingDF[existingDF$type == "exon",] #
 ExPa <- data.frame(existingDFExons$exon_id, existingDFExons$transcript_id)
 colnames(ExPa) <- c("ID", "Parent")
-length(unique(ExPa$Parent)) #
+length(unique(ExPa$Parent))
 occurancesExPa <- c()
 for (parent in unique(ExPa$Parent)) {
   occurancesExPa <- append(occurancesExPa, nrow(ExPa[ExPa$Parent == parent,]))
 }
 parentinfoExPa <- cbind(unique(ExPa$Parent), occurancesExPa)
 colnames(parentinfoExPa) <- c("Parent", "Children")
-nrow(parentinfoExPa[parentinfoExPa[,2] == 1,])/nrow(parentinfoExPa)*100 #
-nrow(parentinfoExPa[parentinfoExPa[,2] >= 2,])/nrow(parentinfoExPa)*100 #
-nrow(parentinfoExPa[parentinfoExPa[,2] >= 3,])/nrow(parentinfoExPa)*100 #
+nrow(parentinfoExPa[parentinfoExPa[,2] == 1,])/nrow(parentinfoExPa)*100
+nrow(parentinfoExPa[parentinfoExPa[,2] >= 2,])/nrow(parentinfoExPa)*100
+nrow(parentinfoExPa[parentinfoExPa[,2] >= 3,])/nrow(parentinfoExPa)*100 
 
-#change exon IDs for exons for other transcripts
-#next line column numbers needs to be changed and tested
-existingDF[existingDF$type == "exon" & !grepl("Mega", existingDF$transcript_id), 24] <- paste(existingDF[existingDF$type == "exon" & !grepl("Mega", existingDF$transcript_id), 15], "-E", existingDF[existingDF$type == "exon" & !grepl("Mega", existingDF$transcript_id), 23], sep="")
+#change exon IDs for exons for other transcripts - this line should laways be checked to ensure the order of columns has not changed:
+existingDF[existingDF$type == "exon" & !grepl("Mega", existingDF$transcript_id), 23] <- paste(existingDF[existingDF$type == "exon" & !grepl("Mega", existingDF$transcript_id), 15], "-E", existingDF[existingDF$type == "exon" & !grepl("Mega", existingDF$transcript_id), 22], sep="")
 
 options(scipen=999)
 write.csv(existingDF, "All_withFixedExonID.csv", row.names=FALSE)
 
 #check number of parents
 length(unique(existingDF[!grepl("Mega", existingDF$transcript_id), 15]))+
-length(unique(existingDF[grepl("Mega", existingDF$transcript_id), 15])) #60673 - NA as well because top-level feature genes don't have parent so this is NA
-length(unique(existingDF[grepl("_1_Mega", existingDF$transcript_id), 15])) #4
-length(unique(existingDF[grepl("_2_Mega", existingDF$transcript_id), 15])) #4
+  length(unique(existingDF[grepl("Mega", existingDF$transcript_id), 15]))
+length(unique(existingDF[grepl("_1_Mega", existingDF$transcript_id), 15])) 
+length(unique(existingDF[grepl("_2_Mega", existingDF$transcript_id), 15]))
 
 setdiff(c(unique(existingDF[!grepl("Mega", existingDF$transcript_id), 15]),unique(existingDF[grepl("Mega", existingDF$transcript_id), 15])), unique(ExPa$Parent))
 
@@ -310,7 +315,7 @@ setdiff(c(unique(existingDF[!grepl("Mega", existingDF$transcript_id), 15]),uniqu
 colnames(existingDF) #add dots and reorder etc. #here needs to be written onwards
 NewGffFile <- existingDF
 NewGffFile <- NewGffFile[,-4] #remove width column
-dim(NewGffFile) #26
+dim(NewGffFile) #614160 26
 #seqnames source type start end . strand . merged:gene_id gene_name gene_biotype transcript
 NewGffFileBeg <- NewGffFile[,c(1,5,6,2,3,4)]
 NewGffFileBeg$dot1 <- rep(".", nrow(NewGffFileBeg))
@@ -335,7 +340,7 @@ for (line in 1:nrow(finalset2)){
     Parent <- append(Parent,MyLine[,2])
   }
   else if (MyLine$type == "exon") {
-    ID <- append(ID,MyLine[,16])
+    ID <- append(ID,MyLine[,15]) #other line changed to fix exon ID issue
     Parent <- append(Parent,MyLine[,7])
   }
   else if (MyLine$type == "start_codon") {
@@ -383,19 +388,19 @@ write.table(data.frame(NewGffFileBeg2, merged2), 'Homo_sapiens.GRCh38.104_Edited
 #Fix the Parents:
 FixNA <- read.csv("Homo_sapiens.GRCh38.104_EditedGff3.csv")
 FixNA$merged <- gsub("Parent=NA;", "", FixNA$merged)
-write.table(FixNA, 'Homo_sapiens.GRCh38.104_Edited.gff3', row.names=FALSE, sep = '\t',  col.names=FALSE, quote = FALSE)
+FixNA$source <- rep("ensembl_havana", 614160) #check this number for future annoatation reference versions
+write.table(FixNA, 'Homo_sapiens.GRCh38.104_Edited.gff3', row.names=FALSE, sep = "\t",  col.names=FALSE, quote = FALSE)
 
-###########################################Part 2########################################################
+#########################Part 2#################################
 
 #assign intron IDs
-setwd("") #Annotation file directory
 options(scipen=999) #make sure they are in the inverse order for "-" stranded genes
 gffIn <- rtracklayer::import('Homo_sapiens.GRCh38.104_Edited_IntronsAdded.gff3')
 gffIn_df <- as.data.frame(gffIn)
-dim(unique(gffIn_df[gffIn_df$type == "gene", ])) #
-dim(unique(gffIn_df[gffIn_df$type == "exon", ])) #
-dim(unique(gffIn_df[gffIn_df$type == "transcript", ])) #
-dim(unique(gffIn_df[gffIn_df$type == "intron", ])) #
+dim(unique(gffIn_df[gffIn_df$type == "gene", ]))
+dim(unique(gffIn_df[gffIn_df$type == "exon", ]))
+dim(unique(gffIn_df[gffIn_df$type == "transcript", ]))
+dim(unique(gffIn_df[gffIn_df$type == "intron", ]))
 
 #examine length distributions
 plot(density(gffIn_df[gffIn_df$type == "exon",]$width))
@@ -479,7 +484,7 @@ write.table(NewGffFileBeg2, 'Homo_sapiens.GRCh38.104_IntronsFinal.gff3', row.nam
 
 NewGffFileBeg2[grepl("ENSG00000248333", NewGffFileBeg2$merged),]
 
-#for gtf
+#for the gtf
 finalset3 <- finalset
 for (column_name in 1:ncol(finalset3)) { #combine: ID, DEScription, Ontology_term, Parent, protein_source_id, etc. with ; between them into new final row: callled everythignelse
   finalset3[,column_name] <- paste('"', finalset3[,column_name], '"', sep="")
