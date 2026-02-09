@@ -342,13 +342,13 @@ else
     Feature2="Survivor"
 fi
 
-echo "Do you have multiple metadata files per run? This second file would contain an addiitonal variable to predict. PLlease type yes or no."
+echo "Do you have multiple metadata files per run? This second file would contain an addiitonal variable for fate map visualisation (groups that define the shape of sample points) and to predict upon (optional, you will be asked if you want to do this in a later question). PLlease type yes or no."
 
 read SeconMe
 
 until [[ "$SeconMe" = @("yes"|"no") ]];
 do
-    echo "Invalid response. Do you have multiple metadata files per run? This second file would contain an addiitonal variable to predict. PLlease type yes or no."
+    echo "Do you have multiple metadata files per run? This second file would contain an addiitonal variable for fate map visualisation (groups that define the shape of sample points) and to predict upon (optional, you will be asked if you want to do this in a later question). PLlease type yes or no."
     read SeconMe
 done
 
