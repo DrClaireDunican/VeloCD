@@ -1,6 +1,5 @@
 # VeloCD
 
-<img width="479" height="374" alt="3d version_2" src="https://github.com/user-attachments/assets/b07d6b4c-2586-420a-b5d0-577662696802" />
 This is the GitHub repository for the VeloCD software tool developed by Dr Claire Dunican as a part of her PhD. This tool has adapted the RNA velocity algorithm (velocyto: http://velocyto.org/) to model and visualise transcriptomic trajectories from whole-blood RNA-Seq data. It can also be used to predict different current (diagnostic, classification) and future (prognostic) disease states. The development of this tool is described in *https://spiral.imperial.ac.uk/entities/publication/8a9c4a39-248c-4140-afcd-fa89804d18b8*. This software should be run using a minimum of three genes and two samples per dataset.
 
 In brief, this method models the relationship between spliced and unspliced transcript expression to extrapolate future transcriptomic states under the assumption that unspliced transcript levels, characterised by the presence of introns, will provide information about future gene expression because they have not yet been processed. RNA velocity is a deviation from the assumption that gene expression change is not occurring (under a steady state). RNA velocity values are calculated as the observed unspliced transcript expression minus the unspliced transcript expression estimated under this steady state assumption.
@@ -14,6 +13,8 @@ VeloCD has two main outputs:
 VeloCD has two main components. The first is the core VeloCD software tool, which is python based but also calls R functions and packages. It is run from the command line using  a .sh file (RunRNAVelocity.sh). 
 
 The other component is a set of R and shell (.pbs) scripts that allow the user to go from raw fastq files to the input files required by VeloCD: spliced and unspliced transcript expression. These scripts have been designed to work on ubuntu computers (version 10+) but can alternatively be run via a ubuntu virtual box. These scripts are in the /PreProcessing sub-directory. Example files that can be input straight into this tool are in /ExampleData, alongside expected example output files. This analysis is expected to take approximately 5 minutes if run using the full range of possible hyperparamters.
+<img width="479" height="374" alt="3d version_2" src="https://github.com/user-attachments/assets/b07d6b4c-2586-420a-b5d0-577662696802" />
+
 ## Dependencies
 The following packages are required to run VeloCD, please ensure that you have 
 python 3 and R installed. This software has been tested on R version 3.6.3 onwards (latest version tested: 4.4.2) and Python 3.9 onwards (latest version tested: 3.13). Install time is expected to take up to a few hours if all dependencies require manual installation. The following dependencies can be installed via the bash command line:
